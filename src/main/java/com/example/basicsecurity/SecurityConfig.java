@@ -13,6 +13,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
 @Configuration
@@ -27,34 +28,22 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
         ;
 
+         httpSecurity
+                 .formLogin();
 
-        httpSecurity
-                .formLogin()
-                //.loginPage("/loginPage")
-                .defaultSuccessUrl("/") //성공 했을 때 URL
-                .failureUrl("/login")
-                .usernameParameter("userId")
-                .passwordParameter("passwd")
-                .loginProcessingUrl("/login_proc")
-                .successHandler(new AuthenticationSuccessHandler() { // 인증에 성공한 경우
-                    @Override
-                    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-                        System.out.println("authentication 성공한 유저 : " + authentication.getName());
-                        response.sendRedirect("/");
-                    }
-                })
-                //Authentication 객체는 로그인 성공했을 경우에만 객체가 생성된다.(인증 성공했을 경우)
+         httpSecurity
+                 .logout()
+                 .logoutUrl("/logout")
+                 .logoutSuccessUrl("/login")
+                 .addLogoutHandler((request, response, authentication) -> {
 
-                .failureHandler(new AuthenticationFailureHandler() { // 인증에 실패한 경우
-                    @Override
-                    public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
-                        System.out.println("exception : " + exception.getMessage());
-                        response.sendRedirect("/login");
-                    }
-                })
+                     HttpSession session = request.getSession();
+                     session.invalidate(); // 세션 무효화
 
-                .permitAll()
-        ;
+                 });
+//                 .logoutSuccessHandler(  )
+
+
 
         return httpSecurity.build();
     }
